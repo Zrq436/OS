@@ -3,8 +3,11 @@
 #define SECTSIZE 512
 
 void bootMain(void) {
-	//TODO
+	void (*app)(void);
+	app = (void(*)(void))0x8c00;
 
+	readSect(app, 1);
+	app();
 }
 
 
