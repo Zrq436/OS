@@ -86,5 +86,5 @@ void loadUMain(void) {
 		*(unsigned char*)(elf + i) = *(unsigned char*)(elf + i + offset);
 	}
 
-	enterUserSpace(uMainEntry);
+	enterUserSpace((uint32_t)uMainEntry);
 }
