@@ -70,9 +70,11 @@ void loadUMain(void) {
 		readSect((void*)(elf + i * 512), 201 + i);
 	}
 
-	uMainEntry = ((struct ELFHeader*)elf)->entry; // entry address of the program
-	phoff = ((struct ELFHeader*)elf)->phoff;
-	offset = ((struct ProgramHeader*)(elf + phoff))->off;
+	struct ELFHeader* elfhdr = (struct ELFHeader*)elf);
+	uMainEntry = elfhdr->entry; // entry address of the program
+	phoff = elfhdr->phoff;
+	struct ProgramHeader* prohdr = (struct ProgramHeader*)(elf + phoff);
+	offset = prohdr->off;
 
 	for (i = 0; i < 200 * 512; i++) {
 		*(uint8_t*)(elf + i) = *(uint8_t*)(elf + i + offset);

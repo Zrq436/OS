@@ -136,9 +136,11 @@ void syscallPrint(struct TrapFrame *tf) {
 		asm volatile("movb %%es:(%1), %0":"=r"(character) : "r"(str + i));
 		// TODO:完成光标的维护和打印到显存
 		if (character != '\n') {
+			//处理显示
 			data = character | (0x0c << 8);
 			pos = (80 * displayRow + displayCol) * 2;
 			asm volatile("movw %0, (%1)"::"r"(data), "r"(pos + 0xb8000));
+			//处理换行
 			displayCol += 1;
 			if (displayCol == 80) {
 				displayCol = 0;

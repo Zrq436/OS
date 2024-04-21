@@ -66,13 +66,15 @@ int32_t syscall(int num, uint32_t a1,uint32_t a2,
 
 char getChar() { // 对应SYS_READ STD_IN
 	// TODO: 实现getChar函数，方式不限
-	return 'a';
+	return '2';
 }
 
 void getStr(char* str, int size) { // 对应SYS_READ STD_STR
 	// TODO: 实现getStr函数，方式不限
-	str[0] = 'a';
-	str[1] = 0;
+	str[0] = 'B';
+	str[1] = 'o';
+	str[2] = 'b';
+	str[3] = 0;
 }
 
 int dec2Str(int decimal, char *buffer, int size, int count);
@@ -90,12 +92,7 @@ void printf(const char *format,...){
 	uint32_t hexadecimal = 0;
 	char* string = 0;
 	char character = 0;
-	//void* para=0;
 	while (format[i] != 0) {
-		//buffer[count] = format[i];
-		//count++;
-		//i++;
-		//TODO: 可以借助状态机（回忆数电），辅助的函数已经实现好了，注意阅读手册	
 		switch (state)
 		{
 		case 0:
@@ -107,33 +104,16 @@ void printf(const char *format,...){
 			default:
 				state = 0;
 				buffer[count++] = format[i];
-				break;
 			}
 			break;
 		case 1:
 			switch (format[i])
 			{
-			case '%':
-				state = 0;
-				buffer[count++] = '%';
-				break;
 			case 'c':
 				state = 0;
 				index += 4;
 				character = *(char*)(paraList + index);
 				buffer[count++] = character;
-				break;
-			case 's':
-				state = 0;
-				index += 4;
-				string = *(char**)(paraList + index);
-				count = str2Str(string, buffer, MAX_BUFFER_SIZE, count);
-				break;
-			case 'x':
-				state = 0;
-				index += 4;
-				hexadecimal = *(uint32_t*)(paraList + index);
-				count = hex2Str(hexadecimal, buffer, MAX_BUFFER_SIZE, count);
 				break;
 			case 'd':
 				state = 0;
@@ -141,18 +121,23 @@ void printf(const char *format,...){
 				decimal = *(int*)(paraList + index);
 				count = dec2Str(decimal, buffer, MAX_BUFFER_SIZE, count);
 				break;
+			case 'x':
+				state = 0;
+				index += 4;
+				hexadecimal = *(uint32_t*)(paraList + index);
+				count = hex2Str(hexadecimal, buffer, MAX_BUFFER_SIZE, count);
+				break;
+			case 's':
+				state = 0;
+				index += 4;
+				string = *(char**)(paraList + index);
+				count = str2Str(string, buffer, MAX_BUFFER_SIZE, count);
+				break;
 			default:
 				state = 2;
-				break;
 			}
 			break;
-		case 2:
-			break;
-		default:
-			break;
 		}
-		if (state == 2)
-			break;
 		i++;
 	}
 	if (count != 0)
