@@ -64,15 +64,23 @@ void loadUMain(void) {
 	int phoff = 0x34; // program header offset
 	int offset = 0x1000; // .text section offset
 	uint32_t elf = 0x200000; // physical memory addr to load
-	uint32_t uMainEntry = 0x200000;
+	uint32_t uMainEntry = 0x200000; // entry address of the program
 
 	for (i = 0; i < 200; i++) {
-		readSect((void*)(elf + i * 512), 201 + i);
+		readSect((void*)(elf + i * 512), 1 + i);
 	}
 
-	uMainEntry = ((struct ELFHeader*)elf)->entry; // entry address of the program
-	phoff = ((struct ELFHeader*)elf)->phoff;
-	offset = ((struct ProgramHeader*)(elf + phoff))->off;
+	// 获取 ELFHeader
+	struct ELFHeader* elfhdr = ((struct ELFHeader*)elf);
+	// 从 ELFHeader中获取 entry 地址
+	uMainEntry = elfhdr->entry;
+	// 从 ELFHeader中获取 phoff
+	phoff = elfhdr->phoff;
+	// 获取ProgramHeader
+	struct ProgramHeader* prohdr = ((struct ProgramHeader*)(elf + phoff));
+	// 从ProgramHeader中获取offset
+	offset = prohdr->off;
+
 
 	for (i = 0; i < 200 * 512; i++) {
 		*(uint8_t*)(elf + i) = *(uint8_t*)(elf + i + offset);
