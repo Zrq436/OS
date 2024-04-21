@@ -66,12 +66,12 @@ int32_t syscall(int num, uint32_t a1,uint32_t a2,
 
 char getChar(){ // 对应SYS_READ STD_IN
 	// TODO: 实现getChar函数，方式不限
-
+	return syscall(SYS_READ, 0, 0, 0, 0, 0);
 }
 
 void getStr(char *str, int size){ // 对应SYS_READ STD_STR
 	// TODO: 实现getStr函数，方式不限
-
+	syscall(SYS_READ, 1, (uint32_t)str, (uint32_t)size, 0, 0);
 }
 
 int dec2Str(int decimal, char *buffer, int size, int count);
@@ -91,9 +91,64 @@ void printf(const char *format,...){
 	char character=0;
 	while(format[i]!=0){
 		// TODO: support format %d %x %s %c
-
-
-
+		switch (state)
+		{
+		case 0:
+			switch (format[i])
+			{
+			case '%':
+				state = 1;
+				break;
+			default:
+				state = 0;
+				buffer[count++] = format[i];
+				break;
+			}
+			break;
+		case 1:
+			switch (format[i])
+			{
+			case '%':
+				state = 0;
+				buffer[count++] = '%';
+				break;
+			case 'c':
+				state = 0;
+				index += 4;
+				character = *(char*)(paraList + index);
+				buffer[count++] = character;
+				break;
+			case 's':
+				state = 0;
+				index += 4;
+				string = *(char**)(paraList + index);
+				count = str2Str(string, buffer, MAX_BUFFER_SIZE, count);
+				break;
+			case 'x':
+				state = 0;
+				index += 4;
+				hexadecimal = *(uint32_t*)(paraList + index);
+				count = hex2Str(hexadecimal, buffer, MAX_BUFFER_SIZE, count);
+				break;
+			case 'd':
+				state = 0;
+				index += 4;
+				decimal = *(int*)(paraList + index);
+				count = dec2Str(decimal, buffer, MAX_BUFFER_SIZE, count);
+				break;
+			default:
+				state = 2;
+				break;
+			}
+			break;
+		case 2:
+			break;
+		default:
+			break;
+		}
+		if (state == 2)
+			break;
+		i++;
 	}
 	if(count!=0)
 		syscall(SYS_WRITE, STD_OUT, (uint32_t)buffer, (uint32_t)count, 0, 0);
