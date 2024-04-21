@@ -64,14 +64,20 @@ int32_t syscall(int num, uint32_t a1,uint32_t a2,
 	return ret;
 }
 
-char getChar(){ // 对应SYS_READ STD_IN
+char getChar() { // 对应SYS_READ STD_IN
 	// TODO: 实现getChar函数，方式不限
-	return syscall(SYS_READ, 0, 0, 0, 0, 0);
+	char ret = 0;
+	while (ret == 0)
+		ret = (char)syscall(SYS_READ, STD_IN, 0, 0, 0, 0);
+	return ret;
 }
 
-void getStr(char *str, int size){ // 对应SYS_READ STD_STR
+void getStr(char* str, int size) { // 对应SYS_READ STD_STR
 	// TODO: 实现getStr函数，方式不限
-	syscall(SYS_READ, 1, (uint32_t)str, (uint32_t)size, 0, 0);
+	int ret = 0;
+	while (ret == 0)
+		ret = syscall(SYS_READ, STD_STR, (uint32_t)str, size, 0, 0);
+	return;
 }
 
 int dec2Str(int decimal, char *buffer, int size, int count);
