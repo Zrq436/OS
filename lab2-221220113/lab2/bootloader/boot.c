@@ -15,7 +15,16 @@ void bootMain(void) {
 		readSect((void*)(elf + i*512), 1+i);
 	}
 
-	// TODO: 阅读boot.h查看elf相关信息，填写kMainEntry、phoff、offset
+	// 获取 ELFHeader
+	struct ELFHeader* elfhdr = ((struct ELFHeader*)elf);
+	// 从 ELFHeader中获取 entry 地址
+	kMainEntry = (void(*)(void))(elfhdr->entry);
+	// 从 ELFHeader中获取 phoff
+	phoff = elfhdr->phoff;
+	// 获取ProgramHeader
+	struct ProgramHeader* prohdr = ((struct ProgramHeader*)(elf + phoff));
+	// 从ProgramHeader中获取offset
+	offset = prohdr->off;
 
 
 	for (i = 0; i < 200 * 512; i++) {

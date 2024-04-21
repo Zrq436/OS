@@ -65,13 +65,11 @@ int32_t syscall(int num, uint32_t a1,uint32_t a2,
 }
 
 char getChar(){ // 对应SYS_READ STD_IN
-	// TODO: 实现getChar函数，方式不限
-
+	return (char)syscall(SYS_READ, STD_IN, 0, 0, 0, 0);
 }
 
 void getStr(char *str, int size){ // 对应SYS_READ STD_STR
-	// TODO: 实现getStr函数，方式不限
-
+	syscall(SYS_READ, STD_STR, (uint32_t)str, size, 0, 0);
 }
 
 int dec2Str(int decimal, char *buffer, int size, int count);
@@ -91,8 +89,36 @@ void printf(const char *format,...){
 	char character=0;
 	while(format[i]!=0){
 		// TODO: support format %d %x %s %c
-
-
+		buffer[count++]=format[i];
+		if(format[i]=='%') {
+			count--; i++;
+			switch(format[i]) {
+				case 'c':
+					character=va_arg(ap, char);
+					buffer[count++]=character;
+					break;
+				case 's':
+					string=va_arg(ap, char*);
+					count=str2Str(string, buffer, (uint32_t)MAX_BUFFER_SIZE, count);
+					break;
+				case 'x':
+					hexadecimal=va_arg(ap, uint32_t);
+					count=hex2Str(hexadecimal, buffer, (uint32_t)MAX_BUFFER_SIZE, count);
+					break;
+				case 'd':
+					decimal=va_arg(ap, int);
+					count=dec2Str(decimal, buffer, (uint32_t)MAX_BUFFER_SIZE, count);
+					break;
+				case '%':
+					count++;
+					break;
+			}							
+		}
+		if(count==MAX_BUFFER_SIZE) {
+			syscall(SYS_WRITE, STD_OUT, (uint32_t)buffer, (uint32_t)MAX_BUFFER_SIZE, 0, 0);
+			count=0;
+		}
+		i++;
 
 	}
 	if(count!=0)
