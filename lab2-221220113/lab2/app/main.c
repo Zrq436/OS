@@ -6,7 +6,7 @@
 
 int uEntry(void) {
 	char character = 'a';
-	char data = character | (0x0c << 8);
+	uint16_t data = character | (0x0c << 8);
 	asm volatile("movw %0, (%1)"::"r"(data), "r"(0 + 0xb8000));
 
 	uint16_t selector;
