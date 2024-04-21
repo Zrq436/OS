@@ -19,7 +19,7 @@ void bootMain(void) {
 	// 获取 ELFHeader
 	struct ELFHeader* elfhdr = ((struct ELFHeader*)elf);
 	// 从 ELFHeader中获取 entry 地址
-	kMainEntry = ((void(*)(void))elfhdr)->entry;
+	kMainEntry = (void(*)(void))(elfhdr->entry);
 	// 从 ELFHeader中获取 phoff
 	phoff = elfhdr->phoff;
 	// 获取ProgramHeader
