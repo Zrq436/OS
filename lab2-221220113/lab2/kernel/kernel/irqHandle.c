@@ -20,7 +20,7 @@ void syscallPrint(struct TrapFrame *tf);
 void syscallRead(struct TrapFrame *tf);
 void syscallGetChar(struct TrapFrame *tf);
 void syscallGetStr(struct TrapFrame *tf);
-
+void syscallScanf(struct  TrapFrame* tf);
 
 void irqHandle(struct TrapFrame *tf) { // pointer tf = esp
 	/*
@@ -124,8 +124,8 @@ void syscallWrite(struct TrapFrame *tf) {
 }
 
 void syscallPrint(struct TrapFrame *tf) {
-	int sel =  USEL(SEG_UDATA);
-	char *str = (char*)tf->edx;
+	int sel = USEL(SEG_UDATA);//segment selector for user data, need further modification
+	char* str = (char*)tf->edx;
 	int size = tf->ebx;
 	int i = 0;
 	int pos = 0;
@@ -133,26 +133,13 @@ void syscallPrint(struct TrapFrame *tf) {
 	uint16_t data = 0;
 	asm volatile("movw %0, %%es"::"m"(sel));
 	for (i = 0; i < size; i++) {
-		asm volatile("movb %%es:(%1), %0":"=r"(character):"r"(str+i));
-		// TODO: 完成光标的维护和打印到显存
-		if (character == '\n') {
-			//处理换行
-			displayRow++;
-			displayCol = 0;
-			tail = 0;
-			if (displayRow == 25) {
-				scrollScreen();
-				displayRow = 24;
-				displayCol = 0;
-			}
-		}
-		else {
-			//处理显示
+		asm volatile("movb %%es:(%1), %0":"=r"(character) : "r"(str + i));
+		// TODO:完成光标的维护和打印到显存
+		if (character != '\n') {
 			data = character | (0x0c << 8);
 			pos = (80 * displayRow + displayCol) * 2;
 			asm volatile("movw %0, (%1)"::"r"(data), "r"(pos + 0xb8000));
-			//处理显示位置
-			displayCol++;
+			displayCol += 1;
 			if (displayCol == 80) {
 				displayCol = 0;
 				displayRow++;
@@ -163,8 +150,17 @@ void syscallPrint(struct TrapFrame *tf) {
 				}
 			}
 		}
+		else {
+			displayCol = 0;
+			displayRow++;
+			if (displayRow == 25) {
+				scrollScreen();
+				displayRow = 24;
+				displayCol = 0;
+			}
+		}
 	}
-	tail=displayCol;
+	tail = displayCol;
 	updateCursor(displayRow, displayCol);
 }
 
