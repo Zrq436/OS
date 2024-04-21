@@ -75,7 +75,7 @@ void KeyboardHandle(struct TrapFrame *tf){
 		}
 	}else if(code < 0x81){ 
 		// TODO: 处理正常的字符
-		char character = (char)(code - 48);
+		char character = getChar(code);
 		if (character != 0) {
 			//处理缓冲区
 			keyBuffer[bufferTail++] = character;
