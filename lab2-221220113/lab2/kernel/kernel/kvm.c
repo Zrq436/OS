@@ -4,6 +4,29 @@
 SegDesc gdt[NR_SEGMENTS];       // the new GDT, NR_SEGMENTS=7, defined in x86/memory.h
 TSS tss;
 
+void* memcpy(void* dst, const void* src, unsigned int n)
+{
+	if (dst == NULL || src == NULL || n <= 0)
+		return NULL;
+
+	char* pdst = (char*)dst;
+	char* psrc = (char*)src;
+	while (n--)
+		*pdst++ = *psrc++;
+
+	return dst;
+}
+
+void* memset(void* s, unsigned int c, unsigned int n)
+{
+	if (NULL == s || n < 0)
+		return NULL;
+	char* tmpS = (char*)s;
+	while (n-- > 0)
+		*tmpS++ = c;
+	return s;
+}
+
 //init GDT and LDT
 void initSeg() { // setup kernel segements
 	gdt[SEG_KCODE] = SEG(STA_X | STA_R, 0,       0xffffffff, DPL_KERN);
@@ -85,7 +108,7 @@ void loadUMain(void) {
 
 	for (; ph < eph; ph++)
 	{
-		if (ph->type == PT_LOAD)
+		if (ph->type == 1)
 		{
 			//若Type为LOAD，则ELF文件中从文件Offset开始位置，连续FileSiz个字节的内容需要被装载
 			//装载到内存VirtAddr开始，连续MemSiz个字节的区域中
