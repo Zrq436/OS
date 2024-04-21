@@ -1,8 +1,33 @@
 #include "x86.h"
 #include "device.h"
 
+#define PT_LOAD 1
 SegDesc gdt[NR_SEGMENTS];       // the new GDT, NR_SEGMENTS=7, defined in x86/memory.h
 TSS tss;
+
+void *memcpy(void *dst, const void *src, unsigned int n)
+{
+    if (dst == NULL || src == NULL || n <= 0)
+        return NULL;
+
+    char * pdst = (char *)dst;
+    char * psrc = (char *)src;
+	while (n--)
+		*pdst++ = *psrc++;
+
+    return dst;
+}
+
+void *memset(void *s,unsigned int c, unsigned int n)
+{
+	if (NULL == s || n < 0)
+		return NULL;
+	char * tmpS = (char *)s;
+	while(n-- > 0)
+		*tmpS++ = c;
+	return s; 
+}
+
 
 //init GDT and LDT
 void initSeg() { // setup kernel segements
@@ -59,32 +84,45 @@ size of user program is not greater than 200*512 bytes, i.e., 100KB
 */
 
 void loadUMain(void) {
+	// TODO: 参照bootloader加载内核的方式，具体加载到哪里请结合手册提示思考！
+	
 	int i = 0;
-	int phoff = 0x34; // program header offset
-	int offset = 0x1000; // .text section offset
-	unsigned int elf = 0x200000; // physical memory addr to load
-	void (*uMainEntry)(void);
-	uMainEntry = (void(*)(void))0x200000; // entry address of the program
+	//int phoff = 0x0;
+	//int offset = 0x0;
+	uint32_t elf = 0x200000;
+	uint32_t uMainEntry = 0;//read to 0x200000
 
-	for (i = 0; i < 200; i++) {
-		readSect((void*)(elf + i * 512), 1 + i);
+	for (i=0;i<200;i++)
+	{
+		readSect((void*)(elf+i*512),201+i);
 	}
 
-	// 获取 ELFHeader
-	struct ELFHeader* elfhdr = ((struct ELFHeader*)elf);
-	// 从 ELFHeader中获取 entry 地址
-	uMainEntry = (void(*)(void))(elfhdr->entry);
-	// 从 ELFHeader中获取 phoff
-	phoff = elfhdr->phoff;
-	// 获取ProgramHeader
-	struct ProgramHeader* prohdr = ((struct ProgramHeader*)(elf + phoff));
-	// 从ProgramHeader中获取offset
-	offset = prohdr->off;
+	//ELF头
+	struct ELFHeader* elfhdr =  ((struct ELFHeader*)elf);
+	uMainEntry = (uint32_t)elfhdr->entry;
+	//phoff = elfhdr->phoff;
+	struct ProgramHeader *ph, *eph;
+	//程序头表
+	ph = (ProgramHeader *)((unsigned int)elfhdr + elfhdr->phoff);
+	//offset = ph->off;
+	//表项的多少
+    eph = ph + elfhdr->phnum;
 
-
-	for (i = 0; i < 200 * 512; i++) {
-		*(unsigned char*)(elf + i) = *(unsigned char*)(elf + i + offset);
+	for (; ph < eph; ph++)
+	{
+		if (ph->type == PT_LOAD)
+		{
+			//若Type为LOAD，则ELF文件中从文件Offset开始位置，连续FileSiz个字节的内容需要被装载
+			//装载到内存VirtAddr开始，连续MemSiz个字节的区域中
+            memcpy((void*)ph->vaddr,(void*)elf+ph->off,ph->filesz);
+			
+			//MemSiz可能大于FileSiz
+            if(ph->memsz>ph->filesz)
+            memset((void*)(ph->vaddr+ph->filesz),0,ph->memsz-ph->filesz);
+		}
 	}
 
-	enterUserSpace((uint32_t)uMainEntry);
+
+	enterUserSpace(uMainEntry);
+	
 }
