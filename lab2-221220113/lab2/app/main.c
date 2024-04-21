@@ -5,9 +5,9 @@
 
 
 int uEntry(void) {
-	//下面三行不用管
+
 	uint16_t selector;
-	asm volatile("movw %%ss, %0":"=m"(selector)); // necessary or not, iret may reset ds in QEMU
+	asm volatile("movw %%ss, %0":"=m"(selector)); 
 	asm volatile("movw %%ax, %%ds"::"a"(selector));
 	
 	
@@ -42,33 +42,6 @@ int uEntry(void) {
 	printf("%s is stronger than Alice\n",name);
 	printf("=======================================================\n");
 	printf("Test end!!! Good luck!!!\n");
-
-	printf("================\n");
-	printf("please input a character:");
-	char x;
-	scanf("%c",&x);
-	printf("================\n");
-	printf("the character is : %c \n",x);
-	printf("================\n");
-	printf("please input a str:");
-	char s[10];
-	scanf("%s",s);
-	printf("================\n");
-	printf("the str is : %s \n",s);
-	printf("================\n");
-	printf("please input two char:");
-	char y;
-	scanf("%c%c",&x,&y);
-	printf("================\n");
-	printf("the two char: %c %c\n",x,y);
-	printf("================\n");
-	printf("please input two str:");
-	printf("");//这句不能注释 我也不知道为什么
-	char t[10];
-	scanf("%s%s",s,t);
-	printf("================\n");
-	printf("the two str: %s %s\n",s,t);
-	printf("================\n");
 
 	while(1);
 	return 0;
