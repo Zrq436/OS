@@ -1,6 +1,6 @@
 #include "lib.h"
 #include "types.h"
-#include "serial.h"
+#include "device.h"
 
 //用户程序，在用户空间，lab测试方法：make clean后make，然后make play
 
