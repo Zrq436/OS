@@ -79,79 +79,55 @@ int hex2Str(uint32_t hexadecimal, char *buffer, int size, int count);
 int str2Str(char *string, char *buffer, int size, int count);
 
 void printf(const char *format,...){
-	int i=0; // format index
+	va_list ap;
+	va_start(ap, format);
+	int i = 0; // format index
 	char buffer[MAX_BUFFER_SIZE];
-	int count=0; // buffer index
-	int index=0; // parameter index
-	void *paraList=(void*)&format; // address of format in stack
-	int state=0; // 0: legal character; 1: '%'; 2: illegal format
-	int decimal=0;
-	uint32_t hexadecimal=0;
-	char *string=0;
-	char character=0;
-	while(format[i]!=0){
-		// TODO: support format %d %x %s %c
-		switch (state)
-		{
-		case 0:
-			switch (format[i])
-			{
-			case '%':
-				state = 1;
-				break;
-			default:
-				state = 0;
-				buffer[count++] = format[i];
-				break;
-			}
-			break;
-		case 1:
-			switch (format[i])
-			{
-			case '%':
-				state = 0;
-				buffer[count++] = '%';
-				break;
+	int count = 0; // buffer index
+	// int index=0; // parameter index
+	// void *paraList=(void*)&format; // address of format in stack
+	// int state=0; // 0: legal character; 1: '%'; 2: illegal format
+	int decimal = 0;
+	uint32_t hexadecimal = 0;
+	char* string = 0;
+	char character = 0;
+	while (format[i] != 0) {
+		// TODO: support more format %s %d %x and so on
+		buffer[count++] = format[i];
+		if (format[i] == '%') {
+			count--; i++;
+			switch (format[i]) {
 			case 'c':
-				state = 0;
-				index += 4;
-				character = *(char*)(paraList + index);
+				character = va_arg(ap, char);
 				buffer[count++] = character;
 				break;
 			case 's':
-				state = 0;
-				index += 4;
-				string = *(char**)(paraList + index);
-				count = str2Str(string, buffer, MAX_BUFFER_SIZE, count);
+				string = va_arg(ap, char*);
+				count = str2Str(string, buffer, (uint32_t)MAX_BUFFER_SIZE, count);
 				break;
 			case 'x':
-				state = 0;
-				index += 4;
-				hexadecimal = *(uint32_t*)(paraList + index);
-				count = hex2Str(hexadecimal, buffer, MAX_BUFFER_SIZE, count);
+				hexadecimal = va_arg(ap, uint32_t);
+				count = hex2Str(hexadecimal, buffer, (uint32_t)MAX_BUFFER_SIZE, count);
 				break;
 			case 'd':
-				state = 0;
-				index += 4;
-				decimal = *(int*)(paraList + index);
-				count = dec2Str(decimal, buffer, MAX_BUFFER_SIZE, count);
+				decimal = va_arg(ap, int);
+				count = dec2Str(decimal, buffer, (uint32_t)MAX_BUFFER_SIZE, count);
 				break;
-			default:
-				state = 2;
+			case '%':
+				count++;
 				break;
 			}
-			break;
-		case 2:
-			break;
-		default:
-			break;
 		}
-		if (state == 2)
-			break;
+		if (count == MAX_BUFFER_SIZE) {
+			syscall(SYS_WRITE, STD_OUT, (uint32_t)buffer, (uint32_t)MAX_BUFFER_SIZE, 0, 0);
+			count = 0;
+		}
 		i++;
 	}
-	if(count!=0)
+	if (count != 0)
 		syscall(SYS_WRITE, STD_OUT, (uint32_t)buffer, (uint32_t)count, 0, 0);
+	va_end(ap);
+	return 0;
 }
 
 int dec2Str(int decimal, char *buffer, int size, int count) {

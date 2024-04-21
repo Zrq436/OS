@@ -5,7 +5,6 @@
 
 
 int uEntry(void) {
-	putChar('a');
 
 	uint16_t selector;
 	asm volatile("movw %%ss, %0":"=m"(selector)); 
