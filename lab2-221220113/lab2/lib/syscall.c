@@ -80,13 +80,13 @@ void printf(const char *format,...){
 	int i=0; // format index
 	char buffer[MAX_BUFFER_SIZE];
 	int count=0; // buffer index
-	int index=0; // parameter index
 	void *paraList=(void*)&format; // address of format in stack
-	int state=0; // 0: legal character; 1: '%'; 2: illegal format
 	int decimal=0;
 	uint32_t hexadecimal=0;
 	char *string=0;
 	char character=0;
+	va_list ap;
+	va_start(ap, paraList);
 	while(format[i]!=0){
 		// TODO: support format %d %x %s %c
 		buffer[count++]=format[i];
@@ -119,8 +119,8 @@ void printf(const char *format,...){
 			count=0;
 		}
 		i++;
-
 	}
+	va_end(ap);
 	if(count!=0)
 		syscall(SYS_WRITE, STD_OUT, (uint32_t)buffer, (uint32_t)count, 0, 0);
 }
