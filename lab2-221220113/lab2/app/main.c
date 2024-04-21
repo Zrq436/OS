@@ -5,7 +5,6 @@
 
 
 int uEntry(void) {
-/***
 	uint16_t selector;
 	asm volatile("movw %%ss, %0":"=m"(selector)); 
 	asm volatile("movw %%ax, %%ds"::"a"(selector));
@@ -44,6 +43,5 @@ int uEntry(void) {
 	printf("Test end!!! Good luck!!!\n");
 
 	while(1);
-***/
 	return 0;
 }
