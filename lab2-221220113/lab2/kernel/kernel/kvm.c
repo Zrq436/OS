@@ -63,27 +63,19 @@ void loadUMain(void) {
 	int i = 0;
 	int phoff = 0x34; // program header offset
 	int offset = 0x1000; // .text section offset
-	unsigned int elf = 0x200000; // physical memory addr to load
-	uint32_t uMainEntry = 0x200000; // entry address of the program
+	uint32_t elf = 0x200000; // physical memory addr to load
+	uint32_t uMainEntry = 0x200000;
 
 	for (i = 0; i < 200; i++) {
-		readSect((void*)(elf + i * 512), 1 + i);
+		readSect((void*)(elf + i * 512), 201 + i);
 	}
 
-	// 获取 ELFHeader
-	struct ELFHeader* elfhdr = ((struct ELFHeader*)elf);
-	// 从 ELFHeader中获取 entry 地址
-	uMainEntry = elfhdr->entry;
-	// 从 ELFHeader中获取 phoff
-	phoff = elfhdr->phoff;
-	// 获取ProgramHeader
-	struct ProgramHeader* prohdr = ((struct ProgramHeader*)(elf + phoff));
-	// 从ProgramHeader中获取offset
-	offset = prohdr->off;
-
+	uMainEntry = ((struct ELFHeader*)elf)->entry; // entry address of the program
+	phoff = ((struct ELFHeader*)elf)->phoff;
+	offset = ((struct ProgramHeader*)(elf + phoff))->off;
 
 	for (i = 0; i < 200 * 512; i++) {
-		*(unsigned char*)(elf + i) = *(unsigned char*)(elf + i + offset);
+		*(uint8_t*)(elf + i) = *(uint8_t*)(elf + i + offset);
 	}
 
 	enterUserSpace(uMainEntry);
