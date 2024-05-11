@@ -15,6 +15,11 @@ void syscallHandle(struct StackFrame *sf);
 void syscallWrite(struct StackFrame *sf);
 void syscallPrint(struct StackFrame *sf);
 
+void timerHandle(struct StackFrame *sf);
+void syscallFork(struct StackFrame *sf);
+void syscallSleep(struct StackFrame *sf);
+void syscallExit(struct StackFrame *sf);
+
 void irqHandle(struct StackFrame *sf)
 { // pointer sf = esp
 	/* Reassign segment register */
@@ -182,13 +187,18 @@ void syscallPrint(struct StackFrame *sf)
 }
 
 // TODO syscallFork ...
+void memcpy(void* dest, void* src, size_t size){
+	for(uint32_t j = 0; j < size; j++){
+		*(uint8_t*)(dest + j)=*(uint8_t*)(src + j);
+	}
+}
 void syscallFork(struct StackFrame *sf){
 	//找空闲pcb
 	for (int i = 1; i < MAX_PCB_NUM; i++){
 		if (pcb[i].state == STATE_DEAD){
 			//找到了，开始拷贝
-			memcpy((void*)((i + 1) * 0x100000),(void*)((current + 1) * 0x100000),0x100000);	
-			memcpy(&pcb[i],&pcb[current],sizeof(ProcessTable));
+			memcpy((void*)((i + 1) * 0x100000), (void*)((current + 1) * 0x100000), 0x100000);	
+			memcpy(&pcb[i], &pcb[current], sizeof(ProcessTable));
 			//开始调整pcb
 			pcb[i].stackTop = (uint32_t)&(pcb[i].regs);
 			pcb[i].prevStackTop = (uint32_t)&(pcb[i].stackTop);
@@ -201,12 +211,12 @@ void syscallFork(struct StackFrame *sf){
 			//eflags不变 
 			//eip不变
 
-			pcb[1].regs.cs = USEL(2 * i + 1);
+			pcb[i].regs.cs = USEL(2 * i + 1);
 			pcb[i].regs.ss = USEL(2 * i + 2);
-			pcb[1].regs.ds = USEL(2 * i + 2);
-			pcb[1].regs.es = USEL(2 * i + 2);
-			pcb[1].regs.fs = USEL(2 * i + 2);
-			pcb[1].regs.gs = USEL(2 * i + 2);
+			pcb[i].regs.ds = USEL(2 * i + 2);
+			pcb[i].regs.es = USEL(2 * i + 2);
+			pcb[i].regs.fs = USEL(2 * i + 2);
+			pcb[i].regs.gs = USEL(2 * i + 2);
 
 			pcb[i].regs.eax = 0;	//子进程返回0
 			pcb[current].regs.eax = i;	//主进程返回i
