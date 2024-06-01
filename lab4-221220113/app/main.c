@@ -6,12 +6,6 @@ sem_t full_buffers;
 sem_t empty_buffers;
 
 void producer(int pid, int index) {
-	// produce special product
-	int i = 1;
-	int offset = 1;
-	for (int i = 1; i < index; i++){
-		offset = offset * 10;
-	}
 	// producer logic
 	while(1){
 		sem_wait(&empty_buffers);	//wait empty
