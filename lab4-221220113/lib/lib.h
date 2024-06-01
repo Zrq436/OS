@@ -42,6 +42,6 @@ int sem_post(sem_t *sem);
 
 int sem_destroy(sem_t *sem);
 
-pid_t getpid();
+pid_t get_pid();
 
 #endif

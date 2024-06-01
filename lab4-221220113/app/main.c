@@ -63,7 +63,6 @@ void consumer(int pid) {
 		printf("pid %d: cosumer find there is a product in buffer\n", pid);
 		printf("pid %d: cosumer consume product successfully, product is %d in buffer[%d]\n", pid, buffer[buffer_head], buffer_head);
 		buffer_head = (buffer_head + 1) % 8;
-		i++;
 		printf("pid %d: consumer unlock mutex, post empty_buffers and sleep 128\n", pid);
 		sem_post(&mutex);
 		sem_post(&empty_buffers);
