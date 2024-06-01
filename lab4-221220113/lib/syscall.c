@@ -594,5 +594,5 @@ int sem_destroy(sem_t *sem) {
 }
 
 pid_t get_pid() {
-	return syscall(SYS_PID, 0, 0, 0, 0, 0);
+	return syscall(7, 0, 0, 0, 0, 0);
 }
