@@ -36,6 +36,7 @@ void producer(int pid, int index) {
 		printf("pid %d: producer %d produce product successfully, product is %d in buffer[%d]\n", pid, index, buffer[buffer_tail], buffer_tail);
 		buffer_tail = (buffer_tail + 1) % 8;
 		i++;
+		buffer_size++;
 		printf("pid %d: producer %d unlock mutex, post full_buffers and sleep 128\n", pid, index);
 		sem_post(&mutex);
 		sem_post(&full_buffers);
@@ -63,6 +64,7 @@ void consumer(int pid) {
 		printf("pid %d: cosumer find there is a product in buffer\n", pid);
 		printf("pid %d: cosumer consume product successfully, product is %d in buffer[%d]\n", pid, buffer[buffer_head], buffer_head);
 		buffer_head = (buffer_head + 1) % 8;
+		buffer_size--;
 		printf("pid %d: consumer unlock mutex, post empty_buffers and sleep 128\n", pid);
 		sem_post(&mutex);
 		sem_post(&empty_buffers);
