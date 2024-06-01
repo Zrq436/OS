@@ -16,6 +16,7 @@ void producer(int pid, int index) {
 	for (int i = 1; i < index; i++){
 		offset = offset * 10;
 	}
+	// producer logic
     while(1){
 		//printf("pid %d: producer %d want to produce product\n", pid, index);
 		//printf("pid %d: producer %d wait on mutex\n", pid, index);
@@ -32,7 +33,7 @@ void producer(int pid, int index) {
 			sem_wait(&mutex);
 			//printf("pid %d: producer %d relock mutex successfully\n", pid, index);
 		}
-		printf("pid %d: producer %d find there is an empty buffer\n", pid, index);
+		//printf("pid %d: producer %d find there is an empty buffer\n", pid, index);
 		buffer[buffer_tail] = i * offset;
 		printf("pid %d: producer %d produce product successfully, product is %d in buffer[%d]\n", pid, index, buffer[buffer_tail], buffer_tail);
 		buffer_tail++;
@@ -132,7 +133,7 @@ int uEntry(void)
 		}
 		printf("Father Process: Semaphore Destroying.\n");
 		sem_destroy(&sem);
-		exit();
+		//exit();
 	}
 
 	// For lab4.3
@@ -145,6 +146,9 @@ int uEntry(void)
 	sem_init(&mutex, 1);
     sem_init(&full_buffers, 0);
 	sem_init(&empty_buffers, 8);
+	for (int i = 0; i < 8; i++){
+		buffer[i] = -1;
+	}
 	for (i = 0; i < 4; i++) {
         if (fork() == 0)
             break;
