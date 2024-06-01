@@ -26,7 +26,7 @@ void producer(int pid, int index) {
 			sem_post(&mutex);
 			printf("pid %d: producer %d wait on empty_buffers\n", pid, index);
 			sem_wait(&empty_buffers);
-			printf("pid %d: producer %d lock empty_buffers successfully\n", pid, index)
+			printf("pid %d: producer %d lock empty_buffers successfully\n", pid, index);
 			printf("pid %d: producer %d wait on mutex\n", pid, index);
 			sem_wait(&mutex);
 			printf("pid %d: producer %d relock mutex successfully\n", pid, index);
@@ -55,7 +55,7 @@ void consumer(int pid) {
 			sem_post(&mutex);
 			printf("pid %d: consumer wait on full_buffers\n", pid);
 			sem_wait(&full_buffers);
-			printf("pid %d: consumer lock empty_buffers successfully\n", pid)
+			printf("pid %d: consumer lock empty_buffers successfully\n", pid);
 			printf("pid %d: consumer wait on mutex\n", pid);
 			sem_wait(&mutex);
 			printf("pid %d: consumer relock mutex successfully\n", pid);
@@ -64,7 +64,7 @@ void consumer(int pid) {
 		printf("pid %d: cosumer consume product successfully, product is %d in buffer[%d]\n", pid, buffer[buffer_head], buffer_head);
 		buffer_head = (buffer_head + 1) % 8;
 		i++;
-		printf("pid %d: consumer unlock mutex, post empty_buffers and sleep 128\n", pid, index);
+		printf("pid %d: consumer unlock mutex, post empty_buffers and sleep 128\n", pid);
 		sem_post(&mutex);
 		sem_post(&empty_buffers);
 		sleep(128);

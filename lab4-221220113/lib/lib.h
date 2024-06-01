@@ -13,6 +13,7 @@
 
 #define STD_OUT 0
 #define STD_IN 1
+#define SYS_PID 7
 
 #define SEM_INIT 0
 #define SEM_WAIT 1
