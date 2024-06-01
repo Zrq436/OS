@@ -151,6 +151,7 @@ void keyboardHandle(struct StackFrame *sf) {
 
 	if (dev[STD_IN].value < 0) { // with process blocked
 		// TODO: deal with blocked situation
+		pt = NULL;
 	}
 
 	return;
@@ -379,6 +380,7 @@ void syscallSemPost(struct StackFrame *sf) {
 		return;
 	}
 	// TODO: complete other situations
+	pt = NULL;
 }
 
 void syscallSemDestroy(struct StackFrame *sf) {
