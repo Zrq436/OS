@@ -18,17 +18,17 @@ void producer(int pid, int index) {
     while(1){
 		printf("pid %d: producer %d want to produce product\n", pid, index);
 		printf("pid %d: producer %d wait on mutex\n", pid, index);
-		sem_wait(mutex);
+		sem_wait(&mutex);
 		printf("pid %d: producer %d lock mutex successfully\n", pid, index);
 		while (buffer_size == 8){
 			printf("pid %d: producer %d find buffer is full\n", pid, index);
 			printf("pid %d: producer %d unlock mutex\n", pid, index);
-			sem_post(mutex);
+			sem_post(&mutex);
 			printf("pid %d: producer %d wait on empty_buffers\n", pid, index);
-			sem_wait(empty_buffers);
+			sem_wait(&empty_buffers);
 			printf("pid %d: producer %d lock empty_buffers successfully\n", pid, index)
 			printf("pid %d: producer %d wait on mutex\n", pid, index);
-			sem_wait(mutex);
+			sem_wait(&mutex);
 			printf("pid %d: producer %d relock mutex successfully\n", pid, index);
 		}
 		printf("pid %d: producer %d find there is an empty buffer\n", pid, index);
@@ -37,8 +37,8 @@ void producer(int pid, int index) {
 		buffer_tail = (buffer_tail + 1) % 8;
 		i++;
 		printf("pid %d: producer %d unlock mutex, post full_buffers and sleep 128\n", pid, index);
-		sem_post(mutex);
-		sem_post(full_buffers);
+		sem_post(&mutex);
+		sem_post(&full_buffers);
 		sleep(128);
 	}
 }
@@ -47,17 +47,17 @@ void consumer(int pid) {
 	while(1){
 		printf("pid %d: consumer want to comsume product\n", pid);
 		printf("pid %d: consumer wait on mutex\n", pid);
-		sem_wait(mutex);
+		sem_wait(&mutex);
 		printf("pid %d: consumer lock mutex successfully\n", pid);
 		while(buffer_size == 0){
 			printf("pid %d: consumer find buffer is empty\n", pid);
 			printf("pid %d: consumer unlock mutex\n", pid);
-			sem_post(mutex);
+			sem_post(&mutex);
 			printf("pid %d: consumer wait on full_buffers\n", pid);
-			sem_wait(full_buffers);
+			sem_wait(&full_buffers);
 			printf("pid %d: consumer lock empty_buffers successfully\n", pid)
 			printf("pid %d: consumer wait on mutex\n", pid);
-			sem_wait(mutex);
+			sem_wait(&mutex);
 			printf("pid %d: consumer relock mutex successfully\n", pid);
 		}
 		printf("pid %d: cosumer find there is a product in buffer\n", pid);
@@ -65,8 +65,8 @@ void consumer(int pid) {
 		buffer_head = (buffer_head + 1) % 8;
 		i++;
 		printf("pid %d: consumer unlock mutex, post empty_buffers and sleep 128\n", pid, index);
-		sem_post(mutex);
-		sem_post(empty_buffers);
+		sem_post(&mutex);
+		sem_post(&empty_buffers);
 		sleep(128);
 	}
 }
@@ -141,7 +141,6 @@ int uEntry(void)
 	sem_init(&mutex, 1);
     sem_init(&full_buffers, 0);
 	sem_init(&empty_buffers, 8);
-	int i;
 	for (i = 0; i < 4; i++) {
         if (fork() == 0)
             break;
