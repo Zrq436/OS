@@ -132,7 +132,7 @@ int uEntry(void)
 		}
 		printf("Father Process: Semaphore Destroying.\n");
 		sem_destroy(&sem);
-		//exit();
+		exit();
 	}
 
 	// For lab4.3
@@ -153,13 +153,11 @@ int uEntry(void)
 	int pid = get_pid();
     if (i == 4) {
         printf("consumer process init over\n");
-		sleep(1280);
 		consumer(pid);
 		exit();
     }
 	else{
 		printf("producer process %d init over\n", i + 1);
-		sleep(1280);
 		producer(pid, i + 1);
 		exit();
 	}
