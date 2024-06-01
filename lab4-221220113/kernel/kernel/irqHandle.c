@@ -17,6 +17,8 @@
 #define SEM_POST 2
 #define SEM_DESTROY 3
 
+#define SYS_PID 7
+
 extern TSS tss;
 
 extern ProcessTable pcb[MAX_PCB_NUM];
