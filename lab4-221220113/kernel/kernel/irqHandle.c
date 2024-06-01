@@ -53,6 +53,7 @@ void syscallSemInit(struct StackFrame *sf);
 void syscallSemWait(struct StackFrame *sf);
 void syscallSemPost(struct StackFrame *sf);
 void syscallSemDestroy(struct StackFrame *sf);
+void syscallPid(struct StackFrame *sf);
 
 void irqHandle(struct StackFrame *sf) { // pointer sf = esp
 	/* Reassign segment register */
@@ -188,6 +189,9 @@ void syscallHandle(struct StackFrame *sf) {
 		case SYS_SEM:
 			syscallSem(sf);
 			break; // for SYS_SEM
+		case SYS_PID:
+			syscallPid(sf);
+			break; // for SYS_PID
 		default:break;
 	}
 }
@@ -486,5 +490,10 @@ void syscallSemDestroy(struct StackFrame *sf) {
 	else
 		pcb[current].regs.eax = -1;
 	return;
+	return;
+}
+
+void syscallPid(struct StackFrame *sf) {
+	pcb[current].regs.eax = current;
 	return;
 }
