@@ -247,6 +247,23 @@ void syscallRead(struct StackFrame *sf) {
 
 void syscallReadStdIn(struct StackFrame *sf) {
 	// TODO: complete `stdin`
+	char* dest = (char*)sf->edx;
+	int length = sf->ebx;
+	int offset = 0;
+	char character;
+	asm volatile("movw %0, %%es"::"m"(sf->ds));
+	while(offset < length - 1 && bufferHead != bufferTail){
+		character = keyBuffer[bufferHead];
+		bufferHead = (bufferHead + 1) % MAX_KEYBUFFER_SIZE;
+		if(character != 0){
+			asm volatile("movb %0, %%es:(%1)"::"r"(character),"r"(dest + offset));
+			offset++;
+		}
+	}
+	asm volatile("movb %0, %%es:(%1)" ::"r"(0),"r"(dest + offset));
+	pcb[current].regs.eax = offset;
+
+	return;
 }
 
 void syscallFork(struct StackFrame *sf) {
