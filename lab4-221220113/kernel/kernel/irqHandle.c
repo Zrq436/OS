@@ -151,7 +151,15 @@ void keyboardHandle(struct StackFrame *sf) {
 
 	if (dev[STD_IN].value < 0) { // with process blocked
 		// TODO: deal with blocked situation
-		pt = NULL;
+		// pop a pcb blocked on scanf device
+		pt = (ProcessTable*)((uint32_t)(dev[STD_IN].pcb.prev) - (uint32_t)&(((ProcessTable*)0)->blocked));
+		dev[STD_IN].pcb.prev = (dev[STD_IN].pcb.prev)->prev;
+		(dev[STD_IN].pcb.prev)->next = &(dev[STD_IN].pcb);
+		// change the pcb
+		pt->state = STATE_RUNNABLE;
+		pt->sleepTime = 0;
+		// change th STDIN value
+		dev[STD_IN].value++;
 	}
 
 	return;
@@ -248,23 +256,46 @@ void syscallRead(struct StackFrame *sf) {
 
 void syscallReadStdIn(struct StackFrame *sf) {
 	// TODO: complete `stdin`
-	char* dest = (char*)sf->edx;
-	int length = sf->ebx;
-	int offset = 0;
-	char character;
-	asm volatile("movw %0, %%es"::"m"(sf->ds));
-	while(offset < length - 1 && bufferHead != bufferTail){
-		character = keyBuffer[bufferHead];
-		bufferHead = (bufferHead + 1) % MAX_KEYBUFFER_SIZE;
-		if(character != 0){
-			asm volatile("movb %0, %%es:(%1)"::"r"(character),"r"(dest + offset));
-			offset++;
+	if (dev[STD_IN].value == 0) {	// can be blocked
+		/*RUN->BLOCKED*/
+		//push in STDIN's blocked list "pcb"
+		pcb[current].blocked.next = dev[STD_IN].pcb.next;
+		pcb[current].blocked.prev = &(dev[STD_IN].pcb);
+		dev[STD_IN].pcb.next = &(pcb[current].blocked);
+		(pcb[current].blocked.next)->prev = &(pcb[current].blocked);
+		//change the pcb
+		pcb[current].state = STATE_BLOCKED;
+		pcb[current].sleepTime = -1;
+		//change the device
+		dev[STD_IN].value--;
+		asm volatile("int $0x20");
+		/*BLOCKED->RUNNABLE->RUN*/
+		char* dest = (char*)sf->edx;
+		int length = sf->ebx;
+		int offset = 0;
+		char character;
+		asm volatile("movw %0, %%es"::"m"(sf->ds));
+		while(offset < length - 1) {
+			if(bufferHead != bufferTail){
+				character = getChar(keyBuffer[bufferHead]);
+				bufferHead = (bufferHead + 1) % MAX_KEYBUFFER_SIZE;
+				putChar(character);
+				if(character != 0) {
+					asm volatile("movb %0, %%es:(%1)"::"r"(character),"r"(dest+offset));
+					offset++;
+				}
+			}
+			else
+				break;
 		}
+		asm volatile("movb $0x00, %%es:(%0)"::"r"(dest+offset));
+		pcb[current].regs.eax = offset;
+		return;
 	}
-	asm volatile("movb %0, %%es:(%1)" ::"r"(0),"r"(dest + offset));
-	pcb[current].regs.eax = offset;
-
-	return;
+	else if (dev[STD_IN].value < 0) { // cannot be blocked(just one process can scanf at the same time)
+		pcb[current].regs.eax = -1;
+		return;
+	}
 }
 
 void syscallFork(struct StackFrame *sf) {
@@ -365,11 +396,50 @@ void syscallSem(struct StackFrame *sf) {
 
 void syscallSemInit(struct StackFrame *sf) {
 	// TODO: complete `SemInit`
+	// find an unused sem
+	int i;
+	for (i = 0; i < MAX_SEM_NUM ; i++) {
+		if (!sem[i].state)
+			break;
+	}
+	if (i != MAX_SEM_NUM) {
+		sem[i].state = 1;
+		sem[i].value = (int32_t)sf->edx;
+		sem[i].pcb.next = &(sem[i].pcb);
+		sem[i].pcb.prev = &(sem[i].pcb);
+		pcb[current].regs.eax = i;
+	}
+	else	//all sem are in use
+		pcb[current].regs.eax = -1;
 	return;
 }
 
 void syscallSemWait(struct StackFrame *sf) {
+	int i = (int)sf->edx;
+	if (i < 0 || i >= MAX_SEM_NUM) {
+		pcb[current].regs.eax = -1;
+		return;
+	}
 	// TODO: complete `SemWait` and note that you need to consider some special situations
+	if (sem[i].state == 1) {
+		//change sem value
+		sem[i].value--;
+		if (sem[i].value < 0) {	
+			//push in blocked list
+			pcb[current].blocked.next = sem[i].pcb.next;
+			pcb[current].blocked.prev = &(sem[i].pcb);
+			sem[i].pcb.next = &(pcb[current].blocked);
+			(pcb[current].blocked.next)->prev = &(pcb[current].blocked);
+			//change pcb
+			pcb[current].state = STATE_BLOCKED;
+			pcb[current].sleepTime = -1;
+			asm volatile("int $0x20");
+		}
+		pcb[current].regs.eax = 0;
+	}
+	else
+		pcb[current].regs.eax = -1;	
+	return;
 }
 
 void syscallSemPost(struct StackFrame *sf) {
@@ -380,10 +450,41 @@ void syscallSemPost(struct StackFrame *sf) {
 		return;
 	}
 	// TODO: complete other situations
-	pt = NULL;
+	if (sem[i].state == 1){
+		// change value
+		sem[i].value++;
+		// wake up a pcb if possible
+		if (sem[i].value <= 0) {
+			// pop
+			pt = (ProcessTable*)((uint32_t)(sem[i].pcb.prev) - (uint32_t)&(((ProcessTable*)0)->blocked));
+			sem[i].pcb.prev = (sem[i].pcb.prev)->prev;
+			(sem[i].pcb.prev)->next = &(sem[i].pcb);
+			// change
+			pt->state = STATE_RUNNABLE;
+			pt->sleepTime = 0;
+		}
+		pcb[current].regs.eax = 0;
+	}
+	else{
+		pcb[current].regs.eax = -1;
+	}
+	return;
 }
 
 void syscallSemDestroy(struct StackFrame *sf) {
+	int i = (int)sf->edx;
+	if (i < 0 || i >= MAX_SEM_NUM) {
+		pcb[current].regs.eax = -1;
+		return;
+	}
 	// TODO: complete `SemDestroy`
+	if (sem[i].state == 1) {
+		sem[i].state = 0;
+		asm volatile("int $0x20");
+		pcb[current].regs.eax = 0;
+	}
+	else
+		pcb[current].regs.eax = -1;
+	return;
 	return;
 }
