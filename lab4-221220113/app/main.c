@@ -35,7 +35,7 @@ void producer(int pid, int index) {
 		printf("pid %d: producer %d find there is an empty buffer\n", pid, index);
 		buffer[buffer_tail] = i * offset;
 		printf("pid %d: producer %d produce product successfully, product is %d in buffer[%d]\n", pid, index, buffer[buffer_tail], buffer_tail);
-		bufffer_tail++;
+		buffer_tail++;
 		buffer_tail = buffer_tail % 8;
 		i++;
 		buffer_size++;
